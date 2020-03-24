@@ -711,6 +711,8 @@ int analyzeFLV(FLV_t *flv, FILE *fp) {
 	size_t i, index;
 	unsigned char flags;
 	FLVTag_t *flvtag;
+	int tb = 0;
+	int dd = 100000;
 
 #ifdef DEBUG
 	fprintf(stderr, "[FLV] analyzing FLV ...\n");
@@ -725,9 +727,16 @@ int analyzeFLV(FLV_t *flv, FILE *fp) {
 			flv->audio.ntags++;
 			flv->audio.datasize += flvtag->datasize;
 			flv->audio.size += flvtag->tagsize;
+			if (!tb) {
+				tb = flvtag->timestamp;
+			}
+			if ( 0 < flvtag->timestamp- flv->audio.lasttimestamp && flvtag->timestamp- flv->audio.lasttimestamp < dd ) {
+				tb += flvtag->timestamp- flv->audio.lasttimestamp;
+			}
 
 			flv->audio.lasttimestamp = flvtag->timestamp;
 			flv->audio.lastframeindex = i;
+			flvtag->timestamp = tb;
 
 			readFLVTagData(&flags, 1, flvtag, fp);
 
@@ -766,6 +775,7 @@ int analyzeFLV(FLV_t *flv, FILE *fp) {
 
 			flv->video.lasttimestamp = flvtag->timestamp;
 			flv->video.lastframeindex = i;
+			flvtag->timestamp = tb;
 
 			readFLVTagData(&flags, 1, flvtag, fp);
 
